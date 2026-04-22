@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Portal Pengumuman Kelulusan | SMA Negeri 1 Samarinda",
+  title: "Portal Kelulusan | SMA Negeri 1 Samarinda",
   description:
     "Akses resmi pengumuman kelulusan siswa SMA Negeri 1 Samarinda Tahun Ajaran 2025/2026.",
 };
