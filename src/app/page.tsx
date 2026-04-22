@@ -132,10 +132,16 @@ export default function Home() {
   ];
 
   return (
-    <main className="relative flex min-h-screen w-full flex-col items-center justify-center bg-zinc-50 p-4 md:p-8 lg:h-screen lg:overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-         <div className="absolute inset-x-0 top-0 h-[60vh] bg-gradient-to-br from-[#0056A3] to-[#003d73] shadow-2xl" />
-         <div className="absolute inset-x-0 top-[55vh] h-20 bg-zinc-50 skew-y-2 origin-left scale-110" />
+    <main className="relative flex min-h-screen w-full flex-col items-center justify-center p-4 md:p-8 lg:h-screen lg:overflow-hidden">
+      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-white">
+         <Image 
+           src="/bg-hero.jpeg" 
+           alt="Background" 
+           fill 
+           priority
+           className="object-cover opacity-100 blur-[10px] scale-110 brightness-90"
+         />
+         <div className="absolute inset-0 bg-white/5" />
       </div>
 
       {/* RESULT MODAL */}
@@ -199,30 +205,36 @@ export default function Home() {
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1 p-8 md:p-12 space-y-10">
              <div className="space-y-6">
-                <div className="flex items-center gap-4">
-                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-xl border border-zinc-100 overflow-hidden p-2 shrink-0">
-                      <Image src="/logo-smansa.jpg" alt="SMANSA Logo" width={48} height={48} className="object-contain" />
+                <div className="flex items-center justify-center gap-6 md:gap-14 border-b border-zinc-100 pb-8 px-4">
+                   <div className="flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-white shadow-lg border border-zinc-100 overflow-hidden p-1.5 shrink-0">
+                      <Image src="/logo-pemprov.png" alt="Pemprov Kaltim Logo" width={50} height={50} className="object-contain" />
                    </div>
-                   <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.3em] text-zinc-400 leading-none mb-1">Dinas Pendidikan Kaltim</p>
-                      <p className="text-sm font-black text-zinc-900 uppercase tracking-tighter leading-none">SMA Negeri 1 Samarinda</p>
+                   <div className="text-center min-w-fit px-4">
+                      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 leading-tight">
+                        Dinas Pendidikan dan Kebudayaan <br className="hidden md:block" /> Provinsi Kalimantan Timur
+                      </p>
+                      <p className="text-xs md:text-base font-black text-zinc-900 uppercase tracking-tighter mt-1 leading-none">SMA Negeri 1 Samarinda</p>
+                   </div>
+                   <div className="flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-white shadow-lg border border-zinc-100 overflow-hidden p-1.5 shrink-0">
+                      <Image src="/logo-smansa.jpg" alt="SMANSA Logo" width={50} height={50} className="object-contain" />
                    </div>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 text-center flex flex-col items-center">
                    <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-zinc-900 leading-[0.9]">
                      Portal <br />
                      <span className="text-gradient">Kelulusan</span>
                    </h1>
-                   <p className="max-w-xs text-sm font-medium leading-relaxed text-zinc-500 pt-2">
+                   <p className="max-w-md text-sm font-medium leading-relaxed text-zinc-500 pt-2">
                      Akses resmi verifikasi data kelulusan peserta didik Tahun Ajaran 2025/2026.
                    </p>
                 </div>
              </div>
              {!countdown.isReached && (
-               <div className="space-y-4">
+               <div className="space-y-4 flex flex-col items-center">
                   <div className="flex items-center gap-3">
                      <span className="h-px w-8 bg-primary/20" />
                      <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Time Remaining</span>
+                     <span className="h-px w-8 bg-primary/20" />
                   </div>
                   <div className="flex gap-4">
                     {countdownItems.map(item => (
@@ -237,13 +249,15 @@ export default function Home() {
                </div>
              )}
              {countdown.isReached && (
-               <div className="inline-flex items-center gap-3 rounded-2xl bg-emerald-50 px-6 py-3 text-[10px] font-bold text-emerald-600 border border-emerald-100">
-                  <i className="ri-checkbox-circle-line text-lg" />
-                  <span className="tracking-widest uppercase">Pengecekan Telah Dibuka</span>
+               <div className="flex justify-center">
+                 <div className="inline-flex items-center gap-3 rounded-2xl bg-emerald-50 px-6 py-3 text-[10px] font-bold text-emerald-600 border border-emerald-100">
+                    <i className="ri-checkbox-circle-line text-lg" />
+                    <span className="tracking-widest uppercase">Pengecekan Telah Dibuka</span>
+                 </div>
                </div>
              )}
           </div>
-          <div className="w-full lg:w-[450px] bg-zinc-50/50 border-l border-zinc-100 p-8 md:p-12">
+          <div className="w-full lg:w-[450px] bg-zinc-50/50 border-l border-zinc-100 p-8 md:p-12 lg:pt-24">
              <div className="mb-10">
                 <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Verifikasi Siswa</h3>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mt-1">Gunakan NISN Resmi Anda</p>
@@ -254,8 +268,14 @@ export default function Home() {
                    <input type="text" inputMode="numeric" placeholder="Contoh: 0012345678" className="input-field" value={nisn} onChange={(e) => setNisn(e.target.value.replace(/\D/g, "").slice(0, 10))} required />
                 </div>
                 <div className="space-y-1.5">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Tanggal Lahir (YYYY-MM-DD)</label>
-                   <input type="date" className="input-field" value={tanggalLahir} onChange={(e) => setTanggalLahir(e.target.value)} required />
+                   <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Tanggal Lahir</label>
+                   <input 
+                     type="date" 
+                     className="input-field" 
+                     value={tanggalLahir} 
+                     onChange={(e) => setTanggalLahir(e.target.value)} 
+                     required 
+                   />
                 </div>
                 <button type="submit" disabled={isLoading || !countdown.isReached} className="btn-primary w-full py-4 text-xs tracking-widest shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale">
                    {isLoading ? <i className="ri-loader-4-line animate-spin text-lg" /> : <i className="ri-search-eye-line text-lg" />}

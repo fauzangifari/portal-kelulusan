@@ -8,8 +8,10 @@ import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
 import Underline from '@tiptap/extension-underline';
 import toast, { Toaster } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
 
 type StudentRecord = {
+  _id?: string;
   nisn: string;
   nama: string;
   status: "LULUS" | "TIDAK LULUS";
@@ -125,11 +127,163 @@ export default function AdminUploadForm() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewData, setReviewData] = useState<StudentRecord[]>([]);
 
+  // Database Tab State
+  const [dbStudents, setDbStudents] = useState<StudentRecord[]>([]);
+  const [isFetchingDb, setIsFetchingDb] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Pagination & Editing State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<StudentRecord | null>(null);
+  const [isSavingRow, setIsSavingRow] = useState(false);
+
+  // Add Manual State
+  const [isAddingManual, setIsAddingManual] = useState(false);
+  const [newManualForm, setNewManualForm] = useState<StudentRecord>({ nisn: "", nama: "", status: "LULUS", tanggalLahir: "" });
+
+  // Delete Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'all'; id?: string; name?: string } | null>(null);
+
   useEffect(() => {
     requestAnimationFrame(() => {
       setMounted(true);
     });
   }, []);
+
+  const fetchDbStudents = async () => {
+    setIsFetchingDb(true);
+    try {
+      const res = await fetch("/api/admin/students");
+      if (res.ok) {
+        const data = await res.json();
+        setDbStudents(data);
+      }
+    } catch {
+      toast.error("Gagal memuat data dari database.");
+    } finally {
+      setIsFetchingDb(false);
+    }
+  };
+
+  const startEditing = (student: StudentRecord) => {
+    setEditingId(student._id || null);
+    setEditForm({ ...student });
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditForm(null);
+  };
+
+  const handleUpdateStudent = async () => {
+    if (!editForm || !editingId) return;
+    
+    if (!isNisnValid(editForm.nisn) || !isDateValid(editForm.tanggalLahir) || !editForm.nama.trim()) {
+      return toast.error("Data tidak valid. Periksa kembali inputan Anda.");
+    }
+
+    setIsSavingRow(true);
+    const toastId = toast.loading("Memperbarui data...");
+    try {
+      const res = await fetch("/api/admin/students", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: editingId, ...editForm }),
+      });
+      const payload = await res.json();
+      if (res.ok) {
+        toast.success(payload.message, { id: toastId });
+        setEditingId(null);
+        setEditForm(null);
+        fetchDbStudents();
+      } else {
+        toast.error(payload.message, { id: toastId });
+      }
+    } catch {
+      toast.error("Terjadi kesalahan koneksi.", { id: toastId });
+    } finally {
+      setIsSavingRow(false);
+    }
+  };
+
+  const handleSaveNewManual = async () => {
+    if (!newManualForm.nisn || !newManualForm.nama || !newManualForm.tanggalLahir) {
+      return toast.error("Semua kolom wajib diisi.");
+    }
+
+    if (!isNisnValid(newManualForm.nisn)) {
+      return toast.error("NISN harus 10 digit angka.");
+    }
+
+    const toastId = toast.loading("Menambahkan siswa...");
+    try {
+      const res = await fetch("/api/admin/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newManualForm),
+      });
+      const payload = await res.json();
+      
+      if (res.ok) {
+        toast.success(payload.message, { id: toastId });
+        setIsAddingManual(false);
+        setNewManualForm({ nisn: "", nama: "", status: "LULUS", tanggalLahir: "" });
+        fetchDbStudents();
+      } else {
+        toast.error(payload.message, { id: toastId });
+      }
+    } catch {
+      toast.error("Gagal terhubung ke server.", { id: toastId });
+    }
+  };
+
+  const handleDeleteStudent = (id: string, name: string) => {
+    setDeleteTarget({ type: 'single', id, name });
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteAllDb = () => {
+    setDeleteTarget({ type: 'all' });
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    
+    const toastId = toast.loading(deleteTarget.type === 'all' ? "Menghapus seluruh database..." : "Menghapus data...");
+    setShowDeleteModal(false);
+
+    try {
+      const url = deleteTarget.type === 'all' ? "/api/admin/students?all=true" : `/api/admin/students?id=${deleteTarget.id}`;
+      const res = await fetch(url, { method: "DELETE" });
+      const payload = await res.json();
+      
+      if (res.ok) {
+        toast.success(payload.message, { id: toastId });
+        if (deleteTarget.type === 'all') {
+          setDbStudents([]);
+          setCurrentPage(1);
+        } else {
+          fetchDbStudents();
+        }
+      } else {
+        toast.error(payload.message, { id: toastId });
+      }
+    } catch {
+      toast.error("Gagal menghapus data.", { id: toastId });
+    } finally {
+      setDeleteTarget(null);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'database') {
+      fetchDbStudents();
+    }
+  }, [activeTab]);
 
   const editor = useEditor({
     extensions: [
@@ -195,40 +349,49 @@ export default function AdminUploadForm() {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
       try {
-        const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
-        if (lines.length < 2) throw new Error("CSV minimal harus memiliki header dan 1 baris data.");
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        
+        // Convert sheet to JSON array of arrays (header included)
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+        
+        if (rows.length < 2) throw new Error("File minimal harus memiliki header dan 1 baris data.");
 
-        const header = lines[0].split(",").map(h => h.trim().toLowerCase());
+        const header = rows[0].map((h: any) => String(h).trim().toLowerCase());
         const nisnIdx = header.indexOf("nisn");
         const namaIdx = header.indexOf("nama");
         const statusIdx = header.indexOf("status");
         const tglIdx = header.indexOf("tanggallahir");
 
         if (nisnIdx === -1 || namaIdx === -1 || statusIdx === -1 || tglIdx === -1) {
-          throw new Error("Header CSV tidak lengkap (nisn, nama, status, tanggalLahir)");
+          throw new Error("Header file tidak lengkap (nisn, nama, status, tanggalLahir)");
         }
 
-        const parsed: StudentRecord[] = lines.slice(1).map(line => {
-          const cols = line.split(",").map(c => c.trim());
-          return {
-            nisn: cols[nisnIdx] || "",
-            nama: cols[namaIdx]?.toUpperCase() || "",
-            status: cols[statusIdx]?.toUpperCase() === "LULUS" ? "LULUS" : "TIDAK LULUS",
-            tanggalLahir: cols[tglIdx] || ""
-          };
-        });
+        const parsed: StudentRecord[] = rows.slice(1)
+          .filter(row => row.length >= 4 && row[nisnIdx]) // Filter empty rows
+          .map(row => {
+            return {
+              nisn: String(row[nisnIdx] || "").trim(),
+              nama: String(row[namaIdx] || "").toUpperCase().trim(),
+              status: String(row[statusIdx] || "").toUpperCase().trim() === "LULUS" ? "LULUS" : "TIDAK LULUS",
+              tanggalLahir: String(row[tglIdx] || "").trim()
+            };
+          });
+
+        if (parsed.length === 0) throw new Error("Tidak ada data valid yang ditemukan.");
 
         setReviewData(parsed);
         setShowReviewModal(true);
         toast.success(`${parsed.length} data siswa berhasil dimuat.`);
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Terjadi kesalahan saat membaca file CSV.";
+        const message = err instanceof Error ? err.message : "Terjadi kesalahan saat membaca file.";
         toast.error(message);
       }
     };
-    reader.readAsText(file);
+    reader.readAsBinaryString(file);
     e.target.value = "";
   };
 
@@ -281,6 +444,7 @@ export default function AdminUploadForm() {
       if (response.ok) {
         toast.success(payload.message, { id: toastId });
         setShowReviewModal(false);
+        fetchDbStudents(); // Refresh the list
       } else {
         toast.error(payload.message, { id: toastId });
       }
@@ -536,20 +700,304 @@ export default function AdminUploadForm() {
                  <div className="grid gap-8 md:grid-cols-2">
                     <div className="rounded-[2.5rem] bg-white p-10 shadow-sm border border-zinc-100 space-y-6">
                        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/5 text-primary"><i className="ri-file-list-3-fill text-3xl" /></div>
-                       <h3 className="text-xl font-black text-zinc-900 uppercase">Impor Data</h3>
-                       <p className="text-sm font-medium text-zinc-500 leading-relaxed">Sinkronisasi hasil kelulusan. Setelah memilih file, Anda dapat mengoreksi data melalui modal review.</p>
-                       <div className="rounded-2xl bg-zinc-50 p-5 border border-zinc-100"><code className="text-[10px] font-bold text-primary">nisn, nama, status, tanggalLahir (YYYY-MM-DD)</code></div>
+                       <div>
+                          <h3 className="text-xl font-black text-zinc-900 uppercase">Impor Data</h3>
+                          <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mt-1">Format: CSV atau Excel (.xlsx)</p>
+                       </div>
+                       <p className="text-sm font-medium text-zinc-500 leading-relaxed">Sistem kini mendukung file Excel. Pastikan header sesuai urutan: <br /> <span className="font-black text-primary">nisn, nama, status, tanggalLahir</span></p>
+                       
+                       <a 
+                         href="/templates/students-template.csv" 
+                         download 
+                         className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-3 text-[10px] font-black text-white hover:bg-primary transition-all uppercase tracking-widest"
+                       >
+                         <i className="ri-download-cloud-2-line text-lg" /> Unduh Template CSV
+                       </a>
                     </div>
                     <div className="rounded-[2.5rem] bg-zinc-900 p-10 shadow-2xl flex flex-col justify-center items-center relative group overflow-hidden cursor-pointer">
-                       <input type="file" accept=".csv" onChange={handleFileChange} className="absolute inset-0 z-10 cursor-pointer opacity-0" />
+                       <input type="file" accept=".csv, .xlsx, .xls" onChange={handleFileChange} className="absolute inset-0 z-10 cursor-pointer opacity-0" />
                        <i className="ri-upload-2-fill text-5xl mb-4 text-zinc-600 group-hover:text-primary transition-colors" />
-                       <p className="text-sm font-black text-zinc-300 uppercase tracking-widest group-hover:text-white transition-colors">Pilih File CSV</p>
+                       <p className="text-sm font-black text-zinc-300 uppercase tracking-widest group-hover:text-white transition-colors">Pilih File CSV / Excel</p>
                     </div>
+                 </div>
+
+                 {/* Format Visual Guide */}
+                 <div className="rounded-[2rem] bg-white p-8 border border-zinc-100 shadow-sm">
+                    <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-6">Panduan Format Kolom</h4>
+                    <div className="grid gap-4 sm:grid-cols-4">
+                       <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <p className="text-[9px] font-black text-primary uppercase mb-1">nisn</p>
+                          <p className="text-[10px] font-medium text-zinc-500">10 Digit Angka</p>
+                       </div>
+                       <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <p className="text-[9px] font-black text-primary uppercase mb-1">nama</p>
+                          <p className="text-[10px] font-medium text-zinc-500">Nama Lengkap</p>
+                       </div>
+                       <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <p className="text-[9px] font-black text-primary uppercase mb-1">status</p>
+                          <p className="text-[10px] font-medium text-zinc-500">LULUS / TIDAK LULUS</p>
+                       </div>
+                       <div className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100">
+                          <p className="text-[9px] font-black text-primary uppercase mb-1">tanggalLahir</p>
+                          <p className="text-[10px] font-medium text-zinc-500">YYYY-MM-DD</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 {/* DATABASE TABLE */}
+                 <div className="rounded-[2.5rem] bg-white p-8 md:p-12 shadow-sm border border-zinc-100 space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                       <div className="flex flex-col md:flex-row md:items-center gap-4">
+                          <div>
+                             <h3 className="text-xl font-black text-zinc-900 uppercase">Daftar Siswa Terdaftar</h3>
+                             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Total {dbStudents.length} data dalam database</p>
+                          </div>
+                          {dbStudents.length > 0 && (
+                            <button 
+                              onClick={handleDeleteAllDb}
+                              className="w-fit flex items-center gap-2 rounded-xl bg-red-50 px-4 py-2 text-[9px] font-black text-red-500 hover:bg-red-500 hover:text-white transition-all uppercase tracking-widest border border-red-100"
+                            >
+                               <i className="ri-delete-bin-line text-base" /> Hapus Semua Data
+                            </button>
+                          )}
+                       </div>
+                       <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
+                          <button 
+                            onClick={() => setIsAddingManual(true)}
+                            className="w-full md:w-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3.5 text-[10px] font-black text-white hover:bg-zinc-900 transition-all uppercase tracking-widest shadow-lg shadow-primary/20"
+                          >
+                             <i className="ri-add-line text-lg" /> Tambah Siswa
+                          </button>
+                          <div className="relative w-full md:w-80">
+                             <i className="ri-search-line absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-lg" />
+                             <input 
+                               type="text" 
+                               placeholder="Cari Nama atau NISN..." 
+                               className="w-full rounded-2xl border border-zinc-200 bg-zinc-50/50 pl-12 pr-6 py-3.5 text-sm font-bold text-zinc-700 outline-none focus:border-primary focus:bg-white transition-all shadow-sm"
+                               value={searchQuery}
+                               onChange={(e) => setSearchQuery(e.target.value)}
+                             />
+                          </div>
+                       </div>
+                    </div>
+
+                    <div className="overflow-x-auto custom-scrollbar">
+                       <table className="w-full border-separate border-spacing-y-2">
+                          <thead>
+                             <tr className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400">
+                                <th className="px-6 pb-2 text-left">Nama Lengkap</th>
+                                <th className="px-6 pb-2 text-left">NISN</th>
+                                <th className="px-6 pb-2 text-left">Status</th>
+                                <th className="px-6 pb-2 text-left">Tanggal Lahir</th>
+                                <th className="w-24">Aksi</th>
+                             </tr>
+                          </thead>
+                          <tbody>
+                             {isAddingManual && (
+                               <tr className="bg-primary/5 ring-2 ring-primary/20 rounded-2xl animate-in slide-in-from-top-2 duration-300">
+                                  <td className="p-2 rounded-l-2xl">
+                                     <input 
+                                       value={newManualForm.nama} 
+                                       onChange={(e) => setNewManualForm({...newManualForm, nama: e.target.value.toUpperCase()})}
+                                       placeholder="NAMA LENGKAP"
+                                       className="w-full bg-white px-3 py-2 rounded-lg border border-primary/30 outline-none focus:ring-2 ring-primary/10 text-xs font-black"
+                                     />
+                                  </td>
+                                  <td className="p-2">
+                                     <input 
+                                       value={newManualForm.nisn} 
+                                       onChange={(e) => setNewManualForm({...newManualForm, nisn: e.target.value.replace(/\D/g, "").slice(0, 10)})}
+                                       placeholder="NISN (10 Digit)"
+                                       className="w-full bg-white px-3 py-2 rounded-lg border border-primary/30 outline-none focus:ring-2 ring-primary/10 text-xs font-bold"
+                                     />
+                                  </td>
+                                  <td className="p-2">
+                                     <select 
+                                       value={newManualForm.status} 
+                                       onChange={(e) => setNewManualForm({...newManualForm, status: e.target.value as any})}
+                                       className="w-full bg-white px-3 py-2 rounded-lg border border-primary/30 outline-none text-[10px] font-black uppercase"
+                                     >
+                                        <option value="LULUS">LULUS</option>
+                                        <option value="TIDAK LULUS">TIDAK LULUS</option>
+                                     </select>
+                                  </td>
+                                  <td className="p-2">
+                                     <input 
+                                       type="date"
+                                       value={newManualForm.tanggalLahir} 
+                                       onChange={(e) => setNewManualForm({...newManualForm, tanggalLahir: e.target.value})}
+                                       className="w-full bg-white px-3 py-2 rounded-lg border border-primary/30 outline-none text-xs font-bold"
+                                     />
+                                  </td>
+                                  <td className="p-2 rounded-r-2xl text-center">
+                                     <div className="flex items-center gap-1">
+                                        <button onClick={handleSaveNewManual} className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-zinc-900 transition-colors">
+                                           <i className="ri-save-line" />
+                                        </button>
+                                        <button onClick={() => { setIsAddingManual(false); setNewManualForm({ nisn: "", nama: "", status: "LULUS", tanggalLahir: "" }); }} className="h-8 w-8 flex items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors">
+                                           <i className="ri-close-line" />
+                                        </button>
+                                     </div>
+                                  </td>
+                               </tr>
+                             )}
+                             {isFetchingDb ? (
+                                <tr>
+                                   <td colSpan={5} className="py-20 text-center">
+                                      <i className="ri-loader-4-line animate-spin text-4xl text-zinc-200" />
+                                   </td>
+                                </tr>
+                             ) : dbStudents.length === 0 ? (
+                                <tr>
+                                   <td colSpan={5} className="py-20 text-center text-zinc-400 font-bold uppercase tracking-widest text-xs">Belum ada data siswa</td>
+                                </tr>
+                             ) : (() => {
+                                const filtered = dbStudents.filter(s => 
+                                   s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                   s.nisn.includes(searchQuery)
+                                );
+                                const totalPages = Math.ceil(filtered.length / itemsPerPage);
+                                const displayed = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+                                return displayed.map((student) => {
+                                   const isEditing = editingId === student._id;
+                                   
+                                   return (
+                                   <tr key={student._id} className="group">
+                                      <td className="bg-zinc-50/50 p-2 rounded-l-2xl border-y border-l border-zinc-100 group-hover:bg-white group-hover:border-primary/20 transition-all font-black text-zinc-800 text-xs uppercase">
+                                         {isEditing ? (
+                                            <input 
+                                              value={editForm?.nama} 
+                                              onChange={(e) => setEditForm(prev => prev ? {...prev, nama: e.target.value.toUpperCase()} : null)}
+                                              className="w-full bg-white px-3 py-2 rounded-lg border border-zinc-200 outline-none focus:border-primary"
+                                            />
+                                         ) : student.nama}
+                                      </td>
+                                      <td className="bg-zinc-50/50 p-2 border-y border-zinc-100 group-hover:bg-white group-hover:border-primary/20 transition-all font-bold text-zinc-500 text-xs tabular-nums">
+                                         {isEditing ? (
+                                            <input 
+                                              value={editForm?.nisn} 
+                                              onChange={(e) => setEditForm(prev => prev ? {...prev, nisn: e.target.value.replace(/\D/g, "").slice(0, 10)} : null)}
+                                              className="w-full bg-white px-3 py-2 rounded-lg border border-zinc-200 outline-none focus:border-primary"
+                                            />
+                                         ) : student.nisn}
+                                      </td>
+                                      <td className="bg-zinc-50/50 p-2 border-y border-zinc-100 group-hover:bg-white group-hover:border-primary/20 transition-all">
+                                         {isEditing ? (
+                                            <select 
+                                              value={editForm?.status} 
+                                              onChange={(e) => setEditForm(prev => prev ? {...prev, status: e.target.value as any} : null)}
+                                              className="w-full bg-white px-3 py-2 rounded-lg border border-zinc-200 outline-none focus:border-primary text-[10px] font-black"
+                                            >
+                                               <option value="LULUS">LULUS</option>
+                                               <option value="TIDAK LULUS">TIDAK LULUS</option>
+                                            </select>
+                                         ) : (
+                                            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${student.status === 'LULUS' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'}`}>
+                                               {student.status}
+                                            </span>
+                                         )}
+                                      </td>
+                                      <td className="bg-zinc-50/50 p-2 border-y border-zinc-100 group-hover:bg-white group-hover:border-primary/20 transition-all font-bold text-zinc-500 text-xs tabular-nums">
+                                         {isEditing ? (
+                                            <input 
+                                              type="date"
+                                              value={editForm?.tanggalLahir} 
+                                              onChange={(e) => setEditForm(prev => prev ? {...prev, tanggalLahir: e.target.value} : null)}
+                                              className="w-full bg-white px-3 py-2 rounded-lg border border-zinc-200 outline-none focus:border-primary"
+                                            />
+                                         ) : student.tanggalLahir}
+                                      </td>
+                                      <td className="bg-zinc-50/50 p-2 rounded-r-2xl border-y border-r border-zinc-100 group-hover:bg-white group-hover:border-primary/20 transition-all text-center">
+                                         {isEditing ? (
+                                            <div className="flex items-center gap-1">
+                                               <button onClick={handleUpdateStudent} disabled={isSavingRow} className="h-8 w-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-zinc-900 transition-colors">
+                                                  {isSavingRow ? <i className="ri-loader-4-line animate-spin" /> : <i className="ri-check-line" />}
+                                               </button>
+                                               <button onClick={cancelEditing} className="h-8 w-8 flex items-center justify-center rounded-lg bg-zinc-100 text-zinc-400 hover:bg-red-50 hover:text-red-500 transition-colors">
+                                                  <i className="ri-close-line" />
+                                               </button>
+                                            </div>
+                                         ) : (
+                                            <div className="flex items-center gap-1">
+                                               <button onClick={() => startEditing(student)} className="h-9 w-9 flex items-center justify-center rounded-xl text-zinc-300 hover:bg-primary/10 hover:text-primary transition-all">
+                                                  <i className="ri-edit-2-line text-lg" />
+                                               </button>
+                                               <button onClick={() => handleDeleteStudent(student._id!, student.nama)} className="h-9 w-9 flex items-center justify-center rounded-xl text-zinc-300 hover:bg-red-50 hover:text-red-500 transition-all">
+                                                  <i className="ri-delete-bin-6-line text-lg" />
+                                               </button>
+                                            </div>
+                                         )}
+                                      </td>
+                                   </tr>
+                                   );
+                                });
+                             })()}
+                          </tbody>
+                       </table>
+                    </div>
+
+                    {/* PAGINATION CONTROLS */}
+                    {dbStudents.length > itemsPerPage && (
+                       <div className="flex items-center justify-between border-t border-zinc-100 pt-8">
+                          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Halaman {currentPage} dari {Math.ceil(dbStudents.filter(s => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.includes(searchQuery)).length / itemsPerPage)}</p>
+                          <div className="flex gap-2">
+                             <button 
+                               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                               disabled={currentPage === 1}
+                               className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-50 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30 transition-all"
+                             >
+                                <i className="ri-arrow-left-s-line text-xl" />
+                             </button>
+                             <button 
+                               onClick={() => setCurrentPage(prev => prev + 1)}
+                               disabled={currentPage >= Math.ceil(dbStudents.filter(s => s.nama.toLowerCase().includes(searchQuery.toLowerCase()) || s.nisn.includes(searchQuery)).length / itemsPerPage)}
+                               className="h-10 w-10 flex items-center justify-center rounded-xl bg-zinc-50 text-zinc-400 hover:bg-zinc-100 disabled:opacity-30 transition-all"
+                             >
+                                <i className="ri-arrow-right-s-line text-xl" />
+                             </button>
+                          </div>
+                       </div>
+                    )}
                  </div>
               </div>
             )}
          </div>
       </section>
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-zinc-900/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+           <div className="w-full max-w-md rounded-[2.5rem] bg-white p-8 md:p-12 shadow-2xl animate-in zoom-in-95 duration-300">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-red-50 text-red-500">
+                 <i className="ri-error-warning-line text-4xl" />
+              </div>
+              <div className="text-center space-y-3">
+                 <h2 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Konfirmasi Hapus</h2>
+                 <p className="text-sm font-medium text-zinc-500 leading-relaxed">
+                    {deleteTarget?.type === 'all' 
+                      ? "Apakah Anda yakin ingin menghapus SELURUH data siswa? Tindakan ini permanen dan tidak bisa dibatalkan." 
+                      : <>Apakah Anda yakin ingin menghapus data siswa <span className="font-black text-zinc-900">"{deleteTarget?.name}"</span>?</>
+                    }
+                 </p>
+              </div>
+              <div className="mt-10 flex flex-col gap-3">
+                 <button 
+                   onClick={confirmDelete}
+                   className="w-full rounded-2xl bg-red-500 py-4 text-xs font-black text-white shadow-xl shadow-red-200 hover:bg-red-600 transition-all active:scale-95"
+                 >
+                    YA, HAPUS SEKARANG
+                 </button>
+                 <button 
+                   onClick={() => { setShowDeleteModal(false); setDeleteTarget(null); }}
+                   className="w-full rounded-2xl bg-zinc-100 py-4 text-xs font-black text-zinc-500 hover:bg-zinc-200 transition-all uppercase tracking-widest"
+                 >
+                    BATALKAN
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
     </main>
   );
 }
