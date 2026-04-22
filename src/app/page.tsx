@@ -205,18 +205,18 @@ export default function Home() {
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1 p-8 md:p-12 space-y-10">
              <div className="space-y-6">
-                <div className="flex items-center justify-center gap-6 md:gap-14 border-b border-zinc-100 pb-8 px-4">
-                   <div className="flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-white shadow-lg border border-zinc-100 overflow-hidden p-1.5 shrink-0">
-                      <Image src="/logo-pemprov.png" alt="Pemprov Kaltim Logo" width={50} height={50} className="object-contain" />
+                <div className="flex items-center justify-center gap-3 md:gap-12 border-b border-zinc-100 pb-8 px-2">
+                   <div className="relative h-10 w-10 md:h-16 md:w-16 shrink-0">
+                      <Image src="/logo-pemprov.png" alt="Pemprov Kaltim Logo" fill className="object-contain" />
                    </div>
-                   <div className="text-center min-w-fit px-4">
-                      <p className="text-[7px] md:text-[9px] font-black uppercase tracking-[0.2em] text-zinc-400 leading-tight">
-                        Dinas Pendidikan dan Kebudayaan <br className="hidden md:block" /> Provinsi Kalimantan Timur
+                   <div className="text-center px-1">
+                      <p className="text-[6px] md:text-[9px] font-black uppercase tracking-widest text-zinc-400 leading-tight">
+                        Dinas Pendidikan dan Kebudayaan <br /> Provinsi Kalimantan Timur
                       </p>
-                      <p className="text-xs md:text-base font-black text-zinc-900 uppercase tracking-tighter mt-1 leading-none">SMA Negeri 1 Samarinda</p>
+                      <p className="text-[11px] md:text-base font-black text-zinc-900 uppercase tracking-tighter mt-1 leading-tight">SMA Negeri 1 Samarinda</p>
                    </div>
-                   <div className="flex h-12 w-12 md:h-16 md:w-16 items-center justify-center rounded-2xl bg-white shadow-lg border border-zinc-100 overflow-hidden p-1.5 shrink-0">
-                      <Image src="/logo-smansa.jpg" alt="SMANSA Logo" width={50} height={50} className="object-contain" />
+                   <div className="relative h-10 w-10 md:h-16 md:w-16 shrink-0">
+                      <Image src="/logo-smansa.jpg" alt="SMANSA Logo" fill className="object-contain rounded-sm" />
                    </div>
                 </div>
                 <div className="space-y-2 text-center flex flex-col items-center">
@@ -257,8 +257,8 @@ export default function Home() {
                </div>
              )}
           </div>
-          <div className="w-full lg:w-[450px] bg-zinc-50/50 border-l border-zinc-100 p-8 md:p-12 lg:pt-24">
-             <div className="mb-10">
+          <div className="w-full lg:w-[450px] bg-zinc-50/50 border-t lg:border-t-0 lg:border-l border-zinc-100 p-8 md:p-12 lg:pt-24 flex flex-col justify-center lg:justify-start">
+             <div className="mb-10 text-center lg:text-left">
                 <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">Verifikasi Siswa</h3>
                 <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mt-1">Gunakan NISN Resmi Anda</p>
              </div>
