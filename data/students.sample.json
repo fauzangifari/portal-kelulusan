@@ -1,0 +1,14 @@
+[
+  {
+    "nisn": "1234567890",
+    "nama": "Alya Putri",
+    "status": "LULUS",
+    "tanggalLahir": "2008-01-12"
+  },
+  {
+    "nisn": "0987654321",
+    "nama": "Budi Santoso",
+    "status": "TIDAK LULUS",
+    "tanggalLahir": "2008-05-20"
+  }
+]

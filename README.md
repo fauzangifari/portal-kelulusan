@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portal Pengumuman Kelulusan SMANSA
 
-## Getting Started
+Aplikasi web modern untuk verifikasi dan pengumuman hasil kelulusan siswa SMA Negeri 1 Samarinda. Dibangun dengan Next.js 15, TypeScript, dan MongoDB.
 
-First, run the development server:
+## Fitur Utama
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Pengecekan Hasil Mandiri**: Siswa dapat mengecek hasil kelulusan menggunakan NISN dan Tanggal Lahir.
+- **Countdown Timer**: Sistem penguncian otomatis yang hanya akan terbuka sesuai jadwal yang ditentukan admin.
+- **Dashboard Admin**: Panel kendali untuk mengatur jadwal, memo, dan data siswa.
+- **Tiptap Rich Text Editor**: Admin dapat mengatur informasi lanjutan dengan format teks lengkap (Bold, List, Link, dll).
+- **Import CSV**: Sinkronisasi data ribuan siswa dalam hitungan detik melalui unggah file CSV dengan modal review sebelum simpan.
+- **DNS Fallback Connection**: Sistem koneksi database yang tangguh, mampu menangani masalah resolusi DNS (umum pada ISP tertentu) secara otomatis.
+- **Rate Limiting & Security**: Dilengkapi pengaman API untuk mencegah brute force dan spamming.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Teknologi
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Framework**: Next.js 15 (App Router)
+- **Bahasa**: TypeScript
+- **Database**: MongoDB via Mongoose
+- **Styling**: Tailwind CSS 4 + GSAP (Animations)
+- **Editor**: Tiptap Editor
+- **Notifications**: React Hot Toast
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Persiapan Dasar (Setup)
 
-## Learn More
+1. **Instalasi Dependency**:
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Konfigurasi Environment**:
+   Salin file `.env.example` menjadi `.env`:
+   ```bash
+   # Windows
+   copy .env.example .env
+   # Linux/Mac
+   cp .env.example .env
+   ```
+   Buka file `.env` dan lengkapi nilai-nilainya (khususnya `MONGODB_URI` dan `ADMIN_PASSWORD`).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Inisialisasi Database (Opsional)**:
+   Gunakan script seed untuk mengisi data contoh:
+   ```bash
+   npm run seed
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Menjalankan di Mode Development**:
+   ```bash
+   npm run dev
+   ```
+   Akses di `http://localhost:3000`.
 
-## Deploy on Vercel
+## Panduan Admin
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **Halaman Admin**: `http://localhost:3000/admin`.
+- **Konfigurasi Portal**: Atur waktu pembukaan pengumuman dan tulis memo lanjutan untuk siswa.
+- **Database Siswa**:
+  - Download template CSV di tab Database.
+  - Header CSV harus: `nisn,nama,status,tanggalLahir`.
+  - Format `tanggalLahir` di CSV: `YYYY-MM-DD` (Contoh: `2008-05-14`).
+  - Setelah pilih file, gunakan modal **Review & Edit** untuk verifikasi akhir sebelum sinkronisasi.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Persiapan Production (Deployment)
+
+1. **Build Project**:
+   ```bash
+   npm run build
+   ```
+
+2. **Deploy ke Vercel (Rekomendasi)**:
+   - Hubungkan repo GitHub ke Vercel.
+   - Masukkan semua isi `.env` ke bagian **Environment Variables** di Dashboard Vercel.
+
+3. **Zonasi Waktu**:
+   Pastikan input tanggal di Admin menggunakan format lokal. Database akan menyimpannya dalam format UTC, dan aplikasi akan menampilkan kembali sesuai zona waktu lokal (WITA).
+
+---
+© 2026 SMA Negeri 1 Samarinda. All Rights Reserved.

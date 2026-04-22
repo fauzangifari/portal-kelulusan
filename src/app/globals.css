@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8faff;
+  --foreground: #0f172a;
+  --color-primary: #0056a3;
+  --color-accent: #ffd700;
+  --color-accent-dark: #ccac00;
+  --font-sans: var(--font-plus-jakarta-sans), var(--font-inter), sans-serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-accent: var(--color-accent);
+  --font-sans: var(--font-sans);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  @apply antialiased overflow-x-hidden;
+}
+
+/* Desktop only no-scroll */
+@media (min-width: 1024px) {
+  body {
+    @apply overflow-hidden;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3.5 font-extrabold text-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:bg-primary/90 hover:shadow-primary/25 active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-zinc-200 bg-white px-4 py-3.5 outline-none ring-primary/10 transition-all duration-300 focus:border-primary focus:ring-4 text-zinc-900 font-semibold;
+  }
+
+  .card-official {
+    @apply relative overflow-hidden rounded-[2rem] border border-zinc-100 bg-white/95 shadow-[0_32px_80px_rgba(0,86,163,0.12)] backdrop-blur-xl;
+  }
+
+  /* Tiptap / Rich Text Content Rendering */
+  .tiptap-content, .tiptap {
+    @apply leading-relaxed text-zinc-600;
+  }
+  .tiptap-content p, .tiptap p {
+    @apply mb-4;
+  }
+  .tiptap-content ul, .tiptap ul {
+    list-style-type: disc !important;
+    @apply ml-8 mb-4 space-y-1 block;
+  }
+  .tiptap-content ol, .tiptap ol {
+    list-style-type: decimal !important;
+    @apply ml-8 mb-4 space-y-1 block;
+  }
+  .tiptap-content li, .tiptap li {
+    @apply list-item;
+  }
+  .tiptap-content h1, .tiptap h1 {
+    @apply text-2xl font-black text-zinc-900 mb-4 mt-6;
+  }
+  .tiptap-content h2, .tiptap h2 {
+    @apply text-xl font-black text-zinc-900 mb-3 mt-5;
+  }
+  .tiptap-content h3, .tiptap h3 {
+    @apply text-lg font-bold text-zinc-800 mb-2 mt-4;
+  }
+  .tiptap-content a, .tiptap a {
+    @apply text-primary underline font-bold hover:text-zinc-900 transition-colors cursor-pointer;
+  }
+  .tiptap-content strong, .tiptap strong {
+    @apply font-black text-zinc-800;
+  }
+  .tiptap-content u, .tiptap u {
+    @apply underline decoration-primary/30 underline-offset-4;
+  }
+
+  /* Specific fix for Editor padding */
+  .tiptap {
+    @apply outline-none p-8 min-h-[250px];
+  }
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #0056a3 0%, #003d73 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
