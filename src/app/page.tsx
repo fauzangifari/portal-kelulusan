@@ -147,7 +147,7 @@ export default function Home() {
       {/* RESULT MODAL */}
       <div 
         ref={modalOverlayRef}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/80 opacity-0 pointer-events-none backdrop-blur-md p-4 md:p-8"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/80 opacity-0 pointer-events-none backdrop-blur-lg p-4 md:p-8"
       >
         <div 
           ref={modalContentRef}
@@ -164,16 +164,24 @@ export default function Home() {
              <div className="mx-auto mb-4 flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-white shadow-lg border border-zinc-100 overflow-hidden p-2">
                 <Image src="/logo-smansa.jpg" alt="SMANSA Logo" width={60} height={60} className="object-contain" />
              </div>
-             <h2 className="text-xl md:text-2xl font-black text-zinc-900 uppercase leading-tight">Pernyataan Hasil</h2>
-             <p className="text-[9px] md:text-[10px] font-bold text-primary tracking-[0.3em] md:tracking-[0.4em] uppercase mt-1 md:mt-2">SMA Negeri 1 Samarinda</p>
-             
-             <div className="my-6 space-y-4 rounded-3xl bg-zinc-50 p-5 md:p-8 border border-zinc-100">
+             <h2 className="text-xl md:text-2xl font-black text-zinc-900 uppercase leading-tight">SMA Negeri 1 Samarinda</h2>
+             <p className="text-[9px] md:text-[10px] font-bold text-primary tracking-[0.1em] md:tracking-[0.2em] uppercase mt-1 md:mt-2">Berdasarkan Surat Keputusan
+              <br />        
+              PLT. Kepala SMA Negeri 1 Samarinda 
+              <br />
+              Nomor : ..../..../SMAN1SMR/2026 
+              <br />
+              tentang Kelulusan Murid Kelas XII Tahun Ajaran 2025/2026 
+              <br />
+              maka : 
+            </p>
+             <div className="my-6 space-y-4 rounded-3xl bg-zinc-50 p-5 md:p-8 border border-zinc-100 text-center">
                 <div className="space-y-1">
-                   <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Nama Siswa</span>
-                   <p className="text-base md:text-lg font-black text-zinc-900 uppercase leading-tight">{result?.nama}</p>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Nama Lengkap</span>
+                    <p className="text-sm md:text-base font-black text-zinc-900 uppercase leading-tight">{result?.nama}</p>
                 </div>
-                <div className="pt-5 md:pt-6 border-t border-zinc-200">
-                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 md:mb-4 block">Hasil Kelulusan</span>
+                <div className="pt-5 md:pt-6 border-t border-zinc-200 text-center">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3 md:mb-4 block">Dinyatakan :</span>
                    <div className={`mx-auto w-fit rounded-2xl px-8 md:px-12 py-3 md:py-4 text-2xl md:text-4xl font-black tracking-[0.1em] shadow-2xl ${
                      result?.status === "LULUS" ? "bg-emerald-500 text-white shadow-emerald-200" : "bg-red-500 text-white shadow-red-200"
                    }`}>
@@ -183,7 +191,7 @@ export default function Home() {
              </div>
 
              <div className="rounded-2xl bg-primary/5 p-4 md:p-5 text-left border border-primary/10 mb-6 md:mb-8">
-                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2">Informasi Lanjutan:</p>
+                <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2">Informasi Tambahan / Keterangan:</p>
                 <div 
                   className="tiptap-content text-[11px] md:text-[12px] max-w-none"
                   dangerouslySetInnerHTML={{ __html: config.announcementMemo }}
@@ -205,7 +213,7 @@ export default function Home() {
         <div className="flex flex-col lg:flex-row">
           <div className="flex-1 p-8 md:p-12 space-y-10">
              <div className="space-y-6">
-                <div className="flex items-center justify-center gap-3 md:gap-12 border-b border-zinc-100 pb-8 px-2">
+                <div className="flex items-center justify-center gap-3 md:gap-11 border-b border-zinc-100 pb-8 px-2">
                    <div className="relative h-10 w-10 md:h-16 md:w-16 shrink-0">
                       <Image src="/logo-pemprov.png" alt="Pemprov Kaltim Logo" fill className="object-contain" />
                    </div>
