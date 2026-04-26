@@ -24,9 +24,9 @@ body {
   @apply antialiased overflow-x-hidden;
 }
 
-/* Desktop only no-scroll */
+/* Desktop only no-scroll — opt-in via class on home page */
 @media (min-width: 1024px) {
-  body {
+  body.lock-scroll-desktop {
     @apply overflow-hidden;
   }
 }

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import gsap from "gsap";
 
 type StudentResult = {
@@ -39,6 +40,13 @@ export default function Home() {
     announcementMemo: "Memuat informasi..."
   });
   const [countdown, setCountdown] = useState<Countdown>({ days: 0, hours: 0, minutes: 0, seconds: 0, isReached: false });
+
+  useEffect(() => {
+    document.body.classList.add("lock-scroll-desktop");
+    return () => {
+      document.body.classList.remove("lock-scroll-desktop");
+    };
+  }, []);
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -117,6 +125,11 @@ export default function Home() {
         return;
       }
       setResult(payload);
+      if (payload.status === "LULUS") {
+        sessionStorage.setItem("tracerStudyPrefill", JSON.stringify({
+          nisn: payload.nisn, nama: payload.nama, tanggalLahir, savedAt: Date.now(),
+        }));
+      }
     } catch {
       setError("Layanan tidak tersedia.");
     } finally {
@@ -192,14 +205,27 @@ export default function Home() {
 
              <div className="rounded-2xl bg-primary/5 p-4 md:p-5 text-left border border-primary/10 mb-6 md:mb-8">
                 <p className="text-[10px] font-bold text-primary/40 uppercase tracking-widest mb-2">Informasi Tambahan / Keterangan:</p>
-                <div 
+                <div
                   className="tiptap-content text-[11px] md:text-[12px] max-w-none"
                   dangerouslySetInnerHTML={{ __html: config.announcementMemo }}
                 />
              </div>
 
-             <button onClick={closeResult} className="btn-primary w-full max-w-[240px] md:max-w-xs py-3.5 md:py-4 text-[10px] md:text-xs tracking-widest">
-                <i className="ri-arrow-left-line mr-2" /> KEMBALI
+             {result?.status === "LULUS" && (
+                <div className="mb-4 md:mb-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 p-4 md:p-5 text-left relative overflow-hidden">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div>
+                      <h4 className="text-sm font-black text-emerald-900 uppercase tracking-tight mb-1">Tracer Study</h4>
+                      <p className="text-[10px] md:text-xs text-emerald-700/80 leading-relaxed font-medium">Bantu sekolah melacak data alumni dengan mengisi form singkat berikut.</p>
+                    </div>
+                    <Link href={`/tracer-study/${result.nisn}`} className="btn-primary shrink-0 !bg-emerald-500 !shadow-emerald-200/50 hover:!bg-emerald-600 px-4 md:px-6 py-2 md:py-3 text-[10px] md:text-xs w-full md:w-auto text-center">
+                      <i className="ri-edit-box-line mr-1.5" /> ISI SEKARANG
+                    </Link>
+                  </div>
+                </div>
+             )}
+
+             <button onClick={closeResult} className="btn-primary w-full max-w-[240px] md:max-w-xs py-3.5 md:py-4 text-[10px] md:text-xs tracking-widest">                <i className="ri-arrow-left-line mr-2" /> KEMBALI
              </button>
           </div>
         </div>
