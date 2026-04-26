@@ -5,10 +5,12 @@ Aplikasi web modern untuk verifikasi dan pengumuman hasil kelulusan siswa SMA Ne
 ## Fitur Utama
 
 - **Pengecekan Hasil Mandiri**: Siswa dapat mengecek hasil kelulusan menggunakan NISN dan Tanggal Lahir.
+- **Tracer Study (Penelusuran Alumni)**: Siswa dapat mengisi rencana setelah lulus (Kuliah atau Kerja) melalui form yang terintegrasi.
 - **Countdown Timer**: Sistem penguncian otomatis yang hanya akan terbuka sesuai jadwal yang ditentukan admin.
-- **Dashboard Admin**: Panel kendali untuk mengatur jadwal, memo, dan data siswa.
+- **Dashboard Admin**: Panel kendali terpadu untuk mengatur jadwal, memo pengumuman, database siswa, dan memantau data alumni.
+- **Export Data Tracer**: Admin dapat mengekspor data tracer study alumni ke format Excel (.xlsx) untuk kebutuhan pelaporan.
 - **Tiptap Rich Text Editor**: Admin dapat mengatur informasi lanjutan dengan format teks lengkap (Bold, List, Link, dll).
-- **Import CSV**: Sinkronisasi data ribuan siswa dalam hitungan detik melalui unggah file CSV dengan modal review sebelum simpan.
+- **Import CSV/Excel**: Sinkronisasi data ribuan siswa dalam hitungan detik melalui unggah file dengan modal review sebelum simpan.
 - **DNS Fallback Connection**: Sistem koneksi database yang tangguh, mampu menangani masalah resolusi DNS (umum pada ISP tertentu) secara otomatis.
 - **Rate Limiting & Security**: Dilengkapi pengaman API untuk mencegah brute force dan spamming.
 
@@ -19,6 +21,7 @@ Aplikasi web modern untuk verifikasi dan pengumuman hasil kelulusan siswa SMA Ne
 - **Database**: MongoDB via Mongoose
 - **Styling**: Tailwind CSS 4 + GSAP (Animations)
 - **Editor**: Tiptap Editor
+- **Data Export**: SheetJS (XLSX)
 - **Notifications**: React Hot Toast
 
 ## Persiapan Dasar (Setup)
@@ -56,9 +59,14 @@ Aplikasi web modern untuk verifikasi dan pengumuman hasil kelulusan siswa SMA Ne
 - **Konfigurasi Portal**: Atur waktu pembukaan pengumuman dan tulis memo lanjutan untuk siswa.
 - **Database Siswa**:
   - Download template CSV di tab Database.
-  - Header CSV harus: `nisn,nama,status,tanggalLahir`.
+  - Header yang didukung: `nisn,nama,status,tanggalLahir`.
   - Format `tanggalLahir` di CSV: `YYYY-MM-DD` (Contoh: `2008-05-14`).
-  - Setelah pilih file, gunakan modal **Review & Edit** untuk verifikasi akhir sebelum sinkronisasi.
+  - Mendukung file `.csv`, `.xlsx`, dan `.xls`.
+  - Gunakan modal **Review & Edit** untuk verifikasi akhir sebelum sinkronisasi.
+- **Tracer Study**:
+  - Tab **Tracer Study** menampilkan daftar alumni yang sudah mengisi data.
+  - Klik baris data untuk melihat detail kontak dan rencana studi/kerja.
+  - Gunakan tombol **Ekspor Excel** untuk mengunduh seluruh data alumni.
 
 ## Persiapan Production (Deployment)
 
