@@ -7,13 +7,26 @@ export async function upsertTracerStudy(
   await connectToDatabase();
   const TracerStudy = getTracerStudyModel();
 
+  const { nisn, ...rest } = data;
+  const $set: Record<string, unknown> = { nisn };
+  const $unset: Record<string, ""> = {};
+
+  for (const [k, v] of Object.entries(rest)) {
+    if (v === undefined || v === null || v === "") {
+      $unset[k] = "";
+    } else {
+      $set[k] = v;
+    }
+  }
+
+  const update: Record<string, unknown> = { $set };
+  if (Object.keys($unset).length) update.$unset = $unset;
+
   return await TracerStudy.findOneAndUpdate(
-    { nisn: data.nisn },
-    { $set: data },
+    { nisn },
+    update,
     { upsert: true, runValidators: true, new: true, setDefaultsOnInsert: true }
-  )
-    .lean()
-    .exec();
+  ).lean().exec();
 }
 
 export async function findTracerStudyByNisn(nisn: string) {

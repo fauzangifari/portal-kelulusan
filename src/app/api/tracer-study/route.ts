@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { nisn, tanggalLahir, tahunMasuk, tahunLulus, noHp, noWa, email, path, universitas, jurusan, perusahaan, jabatan } = body;
+    const { nisn, tanggalLahir, tahunMasuk, tahunLulus, noHp, noWa, email, path, universitas, jurusan, perusahaan, jabatan, alasan } = body;
 
     if (!nisn || !tanggalLahir) {
       return NextResponse.json(
@@ -57,6 +57,13 @@ export async function POST(request: Request) {
     } else if (path === "BEKERJA") {
       if (!perusahaan || perusahaan.length < 2) return NextResponse.json({ error: "Nama perusahaan minimal 2 karakter." }, { status: 400 });
       if (!jabatan || jabatan.length < 2) return NextResponse.json({ error: "Nama jabatan minimal 2 karakter." }, { status: 400 });
+    } else if (path === "TIDAK_BEKERJA") {
+      if (!alasan || typeof alasan !== "string" || alasan.trim().length < 5) {
+        return NextResponse.json({ error: "Alasan minimal 5 karakter." }, { status: 400 });
+      }
+      if (alasan.length > 500) {
+        return NextResponse.json({ error: "Alasan maksimal 500 karakter." }, { status: 400 });
+      }
     }
 
     // Verification step
@@ -86,10 +93,11 @@ export async function POST(request: Request) {
       noWa,
       email: email.toLowerCase(),
       path,
-      universitas: path === "LANJUT_STUDI" ? universitas : undefined,
-      jurusan: path === "LANJUT_STUDI" ? jurusan : undefined,
-      perusahaan: path === "BEKERJA" ? perusahaan : undefined,
-      jabatan: path === "BEKERJA" ? jabatan : undefined,
+      universitas: path === "LANJUT_STUDI"  ? universitas    : undefined,
+      jurusan:     path === "LANJUT_STUDI"  ? jurusan        : undefined,
+      perusahaan:  path === "BEKERJA"       ? perusahaan     : undefined,
+      jabatan:     path === "BEKERJA"       ? jabatan        : undefined,
+      alasan:      path === "TIDAK_BEKERJA" ? alasan.trim()  : undefined,
     };
 
     const result = await upsertTracerStudy(tracerData);

@@ -27,11 +27,12 @@ type TracerStudyRecord = {
   noHp: string;
   noWa: string;
   email: string;
-  path: "LANJUT_STUDI" | "BEKERJA";
+  path: "LANJUT_STUDI" | "BEKERJA" | "TIDAK_BEKERJA";
   universitas?: string;
   jurusan?: string;
   perusahaan?: string;
   jabatan?: string;
+  alasan?: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -180,11 +181,16 @@ export default function AdminUploadForm() {
       }
 
       // Format data for Excel
+      const pathLabel = (p: string) =>
+        p === "LANJUT_STUDI"  ? "Lanjut Studi"  :
+        p === "BEKERJA"       ? "Bekerja"       :
+        p === "TIDAK_BEKERJA" ? "Tidak Bekerja" : "-";
+
       const exportData = data.map((item: TracerStudyRecord, index: number) => ({
         "No": index + 1,
         "Nama Lengkap": item.nama,
         "NISN": item.nisn,
-        "Jalur": item.path === "LANJUT_STUDI" ? "Lanjut Studi" : "Bekerja",
+        "Jalur": pathLabel(item.path),
         "Tahun Masuk": item.tahunMasuk,
         "Tahun Lulus": item.tahunLulus,
         "No HP": item.noHp,
@@ -194,6 +200,7 @@ export default function AdminUploadForm() {
         "Fakultas/Jurusan": item.jurusan || "-",
         "Perusahaan/Usaha": item.perusahaan || "-",
         "Posisi/Jabatan": item.jabatan || "-",
+        "Alasan (Tidak Bekerja)": item.alasan || "-",
         "Waktu Submit": new Date(item.createdAt).toLocaleString('id-ID')
       }));
 
@@ -680,9 +687,17 @@ export default function AdminUploadForm() {
                                             <div className="text-[10px] font-bold text-zinc-400 tabular-nums mt-0.5">{item.nisn}</div>
                                          </td>
                                          <td className="px-6 py-4">
-                                            <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${item.path === 'LANJUT_STUDI' ? 'bg-blue-50 text-blue-600 border border-blue-100' : 'bg-orange-50 text-orange-600 border border-orange-100'}`}>
-                                               <i className={item.path === 'LANJUT_STUDI' ? "ri-graduation-cap-fill" : "ri-briefcase-fill"} />
-                                               {item.path === 'LANJUT_STUDI' ? "Lanjut Studi" : "Bekerja"}
+                                            <span className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
+                                              item.path === 'LANJUT_STUDI' ? 'bg-blue-50 text-blue-600 border border-blue-100' :
+                                              item.path === 'BEKERJA'      ? 'bg-orange-50 text-orange-600 border border-orange-100' :
+                                                                             'bg-zinc-100 text-zinc-600 border border-zinc-200'
+                                            }`}>
+                                              <i className={
+                                                item.path === 'LANJUT_STUDI' ? "ri-graduation-cap-fill" :
+                                                item.path === 'BEKERJA'      ? "ri-briefcase-fill"      :
+                                                                               "ri-pause-circle-fill"
+                                              } />
+                                              {item.path === 'LANJUT_STUDI' ? "Lanjut Studi" : item.path === 'BEKERJA' ? "Bekerja" : "Tidak Bekerja"}
                                             </span>
                                          </td>
                                          <td className="px-6 py-4">
@@ -726,14 +741,16 @@ export default function AdminUploadForm() {
                                       <h5 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest border-b border-zinc-100 pb-2">Detail Jalur</h5>
                                       {item.path === 'LANJUT_STUDI' ? (
                                          <div className="space-y-1">
-                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-building-4-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.universitas}</div>
-                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-book-open-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.jurusan}</div>
+                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-building-4-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.universitas || "-"}</div>
+                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-book-open-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.jurusan || "-"}</div>
+                                         </div>
+                                      ) : item.path === 'BEKERJA' ? (
+                                         <div className="space-y-1">
+                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-building-4-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.perusahaan || "-"}</div>
+                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-user-star-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.jabatan || "-"}</div>
                                          </div>
                                       ) : (
-                                         <div className="space-y-1">
-                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-building-4-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.perusahaan}</div>
-                                            <div className="text-xs font-medium text-zinc-600"><i className="ri-user-star-fill text-zinc-400 mr-2 w-4 inline-block text-center" /> {item.jabatan}</div>
-                                         </div>
+                                         <div className="text-xs font-medium text-zinc-600 whitespace-pre-wrap"><i className="ri-chat-quote-fill text-zinc-400 mr-2 w-4 inline-block align-top text-center" /> <span>{item.alasan || "-"}</span></div>
                                       )}
                                    </div>
                                 </div>

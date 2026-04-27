@@ -16,11 +16,12 @@ type FormState = {
   noHp: string;
   noWa: string;
   email: string;
-  path: "LANJUT_STUDI" | "BEKERJA" | "";
+  path: "LANJUT_STUDI" | "BEKERJA" | "TIDAK_BEKERJA" | "";
   universitas: string;
   jurusan: string;
   perusahaan: string;
   jabatan: string;
+  alasan: string;
 };
 
 export default function TracerForm({ nisn }: { nisn: string }) {
@@ -30,6 +31,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
   const [verifyError, setVerifyError] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedData, setSubmittedData] = useState<FormState | null>(null);
   
   const [step, setStep] = useState<1 | 2>(1);
   const [formData, setFormData] = useState<FormState>({
@@ -46,6 +48,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
     jurusan: "",
     perusahaan: "",
     jabatan: "",
+    alasan: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -109,6 +112,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
           setFormData({
             ...baseData,
             ...verifyData.existing,
+            alasan: verifyData.existing.alasan ?? "",
           });
         } else {
           setFormData((prev) => ({ ...prev, ...baseData }));
@@ -124,7 +128,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
     init();
   }, [nisn]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "noHp" || name === "noWa") {
       setFormData((prev) => ({ ...prev, [name]: value.replace(/\D/g, "") }));
@@ -160,6 +164,12 @@ export default function TracerForm({ nisn }: { nisn: string }) {
     } else if (formData.path === "BEKERJA") {
       if (!formData.perusahaan || formData.perusahaan.length < 2) newErrors.perusahaan = "Minimal 2 karakter.";
       if (!formData.jabatan || formData.jabatan.length < 2) newErrors.jabatan = "Minimal 2 karakter.";
+    } else if (formData.path === "TIDAK_BEKERJA") {
+      if (!formData.alasan || formData.alasan.trim().length < 5) {
+        newErrors.alasan = "Alasan minimal 5 karakter.";
+      } else if (formData.alasan.length > 500) {
+        newErrors.alasan = "Alasan maksimal 500 karakter.";
+      }
     }
 
     setErrors(newErrors);
@@ -207,6 +217,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
       }
 
       toast.success("Data berhasil disimpan!");
+      setSubmittedData(formData);
       setSubmitted(true);
       // We don't remove session here so user can edit if they want, or we can handle it in SuccessScreen.
     } catch {
@@ -243,7 +254,7 @@ export default function TracerForm({ nisn }: { nisn: string }) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-zinc-50 p-4 md:p-8">
         <div className="w-full max-w-xl rounded-3xl bg-white p-6 md:p-10 shadow-xl border border-zinc-100">
-          <SuccessScreen onBack={() => { setSubmitted(false); setStep(1); }} />
+          <SuccessScreen data={submittedData} onBack={() => { setSubmitted(false); setStep(1); }} />
         </div>
       </div>
     );
@@ -343,10 +354,10 @@ export default function TracerForm({ nisn }: { nisn: string }) {
             <div className="space-y-6">
               <h3 className="text-sm font-black text-zinc-900 uppercase tracking-tight mb-4">Rencana Setelah Lulus</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {/* Lanjut Studi Card */}
-                <div 
-                  onClick={() => { setFormData(p => ({ ...p, path: "LANJUT_STUDI" })); setErrors({}); }}
+                <div
+                  onClick={() => { setFormData(p => ({ ...p, path: "LANJUT_STUDI", perusahaan: "", jabatan: "", alasan: "" })); setErrors({}); }}
                   className={`cursor-pointer rounded-2xl border-2 p-5 transition-all duration-300 ${formData.path === 'LANJUT_STUDI' ? 'border-primary bg-primary/5 scale-[1.02] shadow-xl' : 'border-zinc-100 bg-white hover:border-zinc-200 hover:bg-zinc-50'}`}
                 >
                   <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${formData.path === 'LANJUT_STUDI' ? 'bg-primary text-white shadow-lg' : 'bg-zinc-100 text-zinc-500'}`}>
@@ -357,8 +368,8 @@ export default function TracerForm({ nisn }: { nisn: string }) {
                 </div>
 
                 {/* Bekerja Card */}
-                <div 
-                  onClick={() => { setFormData(p => ({ ...p, path: "BEKERJA" })); setErrors({}); }}
+                <div
+                  onClick={() => { setFormData(p => ({ ...p, path: "BEKERJA", universitas: "", jurusan: "", alasan: "" })); setErrors({}); }}
                   className={`cursor-pointer rounded-2xl border-2 p-5 transition-all duration-300 ${formData.path === 'BEKERJA' ? 'border-primary bg-primary/5 scale-[1.02] shadow-xl' : 'border-zinc-100 bg-white hover:border-zinc-200 hover:bg-zinc-50'}`}
                 >
                   <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${formData.path === 'BEKERJA' ? 'bg-primary text-white shadow-lg' : 'bg-zinc-100 text-zinc-500'}`}>
@@ -366,6 +377,18 @@ export default function TracerForm({ nisn }: { nisn: string }) {
                   </div>
                   <h4 className="text-sm font-black text-zinc-900 uppercase">Bekerja / Wirausaha</h4>
                   <p className="text-[10px] text-zinc-500 mt-1">Masuk dunia kerja atau merintis usaha.</p>
+                </div>
+
+                {/* Tidak Bekerja Card */}
+                <div
+                  onClick={() => { setFormData(p => ({ ...p, path: "TIDAK_BEKERJA", universitas: "", jurusan: "", perusahaan: "", jabatan: "" })); setErrors({}); }}
+                  className={`cursor-pointer rounded-2xl border-2 p-5 transition-all duration-300 ${formData.path === 'TIDAK_BEKERJA' ? 'border-primary bg-primary/5 scale-[1.02] shadow-xl' : 'border-zinc-100 bg-white hover:border-zinc-200 hover:bg-zinc-50'}`}
+                >
+                  <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${formData.path === 'TIDAK_BEKERJA' ? 'bg-primary text-white shadow-lg' : 'bg-zinc-100 text-zinc-500'}`}>
+                    <i className="ri-pause-circle-fill text-2xl" />
+                  </div>
+                  <h4 className="text-sm font-black text-zinc-900 uppercase">Tidak Bekerja</h4>
+                  <p className="text-[10px] text-zinc-500 mt-1">Belum bekerja atau menunggu kesempatan.</p>
                 </div>
               </div>
 
@@ -395,6 +418,27 @@ export default function TracerForm({ nisn }: { nisn: string }) {
                     <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Posisi / Jabatan</label>
                     <input type="text" name="jabatan" className={`input-field ${errors.jabatan ? 'border-red-500 ring-red-500' : ''}`} value={formData.jabatan} onChange={handleChange} placeholder="Contoh: Staff Admin" />
                     {errors.jabatan && <p className="text-[10px] text-red-500 ml-1 animate-pulse">{errors.jabatan}</p>}
+                  </div>
+                </div>
+              )}
+
+              {formData.path === "TIDAK_BEKERJA" && (
+                <div className="space-y-1.5 animate-[slideIn_0.3s_ease-out]">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-zinc-500 ml-1">Alasan</label>
+                  <textarea
+                    name="alasan"
+                    rows={4}
+                    maxLength={500}
+                    className={`input-field min-h-[110px] resize-y ${errors.alasan ? 'border-red-500 ring-red-500' : ''}`}
+                    value={formData.alasan}
+                    onChange={handleChange}
+                    placeholder="Ceritakan singkat alasan Anda saat ini belum bekerja / lanjut studi..."
+                  />
+                  <div className="flex justify-between items-center">
+                    {errors.alasan
+                      ? <p className="text-[10px] text-red-500 ml-1 animate-pulse">{errors.alasan}</p>
+                      : <span />}
+                    <p className="text-[10px] text-zinc-400 ml-1 tabular-nums">{formData.alasan.length}/500</p>
                   </div>
                 </div>
               )}

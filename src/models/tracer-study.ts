@@ -1,6 +1,6 @@
 import mongoose, { Model, Schema } from "mongoose";
 
-export const TRACER_PATHS = ["LANJUT_STUDI", "BEKERJA"] as const;
+export const TRACER_PATHS = ["LANJUT_STUDI", "BEKERJA", "TIDAK_BEKERJA"] as const;
 export type TracerPath = (typeof TRACER_PATHS)[number];
 
 export type TracerStudyDocument = {
@@ -16,6 +16,7 @@ export type TracerStudyDocument = {
   jurusan?: string;
   perusahaan?: string;
   jabatan?: string;
+  alasan?: string;
   createdAt?: Date;
   updatedAt?: Date;
 };
@@ -53,6 +54,7 @@ const tracerStudySchema = new Schema<TracerStudyDocument>(
     jurusan: { type: String, trim: true },
     perusahaan: { type: String, trim: true },
     jabatan: { type: String, trim: true },
+    alasan: { type: String, trim: true, maxlength: 500 },
   },
   { timestamps: true, versionKey: false }
 );
@@ -77,6 +79,13 @@ tracerStudySchema.pre("validate", function (next) {
     }
     if (!this.jabatan || this.jabatan.length < 2) {
       this.invalidate("jabatan", "Nama jabatan minimal 2 karakter.");
+    }
+  } else if (this.path === "TIDAK_BEKERJA") {
+    if (!this.alasan || this.alasan.trim().length < 5) {
+      this.invalidate("alasan", "Alasan minimal 5 karakter.");
+    }
+    if (this.alasan && this.alasan.length > 500) {
+      this.invalidate("alasan", "Alasan maksimal 500 karakter.");
     }
   }
   next();
