@@ -28,21 +28,23 @@ export async function POST(request: Request) {
     const Student = getStudentModel();
 
     try {
-      // BERSINKRONISASI
-      await Student.deleteMany({});
-      const result = await Student.insertMany(records, { ordered: true });
+      const bulkOps = records.map((record) => ({
+        updateOne: {
+          filter: { nisn: record.nisn },
+          update: { $set: record },
+          upsert: true,
+        },
+      }));
 
-      return Response.json({ 
-        message: `Sinkronisasi Berhasil! ${result.length} data siswa telah diperbarui.`,
-        count: result.length
+      const result = await Student.bulkWrite(bulkOps, { ordered: false });
+      const total = result.upsertedCount + result.modifiedCount;
+
+      return Response.json({
+        message: `Berhasil! ${result.upsertedCount} data baru ditambahkan, ${result.modifiedCount} data diperbarui.`,
+        count: total,
       }, { status: 200 });
 
     } catch (dbError: unknown) {
-      if (dbError && typeof dbError === 'object' && 'code' in dbError && dbError.code === 11000) {
-        return Response.json({ 
-          message: "Gagal: Terdapat NISN ganda. Pastikan satu NISN unik untuk satu siswa." 
-        }, { status: 400 });
-      }
       const message = dbError instanceof Error ? dbError.message : "Unknown database error";
       return Response.json({ message: `Database Error: ${message}` }, { status: 400 });
     }

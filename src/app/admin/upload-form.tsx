@@ -390,7 +390,7 @@ export default function AdminUploadForm() {
     reader.onload = (event) => {
       try {
         const data = event.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
+        const workbook = XLSX.read(data, { type: 'binary', cellDates: true });
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][];
@@ -405,7 +405,16 @@ export default function AdminUploadForm() {
           nisn: String(row[nisnIdx] || "").trim(),
           nama: String(row[namaIdx] || "").toUpperCase().trim(),
           status: String(row[statusIdx] || "").toUpperCase().trim() === "LULUS" ? "LULUS" : "TIDAK LULUS",
-          tanggalLahir: String(row[tglIdx] || "").trim()
+          tanggalLahir: (() => {
+            const val = row[tglIdx];
+            if (val instanceof Date) {
+              const y = val.getFullYear();
+              const m = String(val.getMonth() + 1).padStart(2, '0');
+              const d = String(val.getDate()).padStart(2, '0');
+              return `${y}-${m}-${d}`;
+            }
+            return String(val || "").trim();
+          })()
         }));
         setReviewData(parsed);
         setShowReviewModal(true);
