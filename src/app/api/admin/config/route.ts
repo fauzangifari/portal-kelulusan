@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { connectToDatabase } from "@/lib/mongoose";
 import { getConfigModel } from "@/models/config";
 import { isAdminSessionTokenValid, ADMIN_SESSION_COOKIE } from "@/lib/admin-auth";
+import { normalizeWitaDateString } from "@/lib/datetime";
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     if (announcementDate) {
       await Config.findOneAndUpdate(
         { key: "announcementDate" },
-        { value: announcementDate },
+        { value: normalizeWitaDateString(String(announcementDate)) },
         { upsert: true }
       );
     }

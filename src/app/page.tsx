@@ -36,7 +36,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   
   const [config, setConfig] = useState<PortalConfig>({
-    announcementDate: "2000-01-01T00:00:00+07:00",
+    announcementDate: "2000-01-01T00:00:00+08:00",
     announcementMemo: "Memuat informasi..."
   });
   const [countdown, setCountdown] = useState<Countdown>({ days: 0, hours: 0, minutes: 0, seconds: 0, isReached: false });

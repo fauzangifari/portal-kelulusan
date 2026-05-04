@@ -368,7 +368,7 @@ export default function AdminUploadForm() {
         const configRes = await fetch("/api/config");
         const config = await configRes.json();
         if (configRes.ok && isActive) {
-          const dateStr = config.announcementDate || "2000-01-01T00:00:00+07:00";
+          const dateStr = config.announcementDate || "2000-01-01T00:00:00+08:00";
           const date = new Date(dateStr);
           const offset = date.getTimezoneOffset() * 60000;
           const localISOTime = new Date(date.getTime() - offset).toISOString().slice(0, 16);

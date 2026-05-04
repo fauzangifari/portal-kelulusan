@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
 type SubmittedData = {
+  nama: string;
+  nisn: string;
   tahunMasuk: number | "";
   noHp: string;
   noWa: string;
@@ -39,6 +41,8 @@ export default function SuccessScreen({
 
   const rows: { label: string; value: string; icon: string }[] = [];
   if (data) {
+    if (data.nama)       rows.push({ label: "Nama",        value: data.nama,                icon: "ri-user-line" });
+    if (data.nisn)       rows.push({ label: "NISN",        value: data.nisn,                icon: "ri-id-card-line" });
     if (data.tahunMasuk) rows.push({ label: "Tahun Masuk", value: String(data.tahunMasuk), icon: "ri-calendar-line" });
     if (data.noHp)       rows.push({ label: "No HP",       value: data.noHp,                icon: "ri-phone-line" });
     if (data.noWa)       rows.push({ label: "No WhatsApp", value: data.noWa,                icon: "ri-whatsapp-line" });

@@ -2,6 +2,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { findStudentResultByNisnAndBirthDate } from "@/lib/student-repository";
 import { connectToDatabase } from "@/lib/mongoose";
 import { getConfigModel } from "@/models/config";
+import { normalizeWitaDateString } from "@/lib/datetime";
 
 type RequestBody = {
   nisn?: string;
@@ -29,8 +30,8 @@ export async function POST(request: Request) {
   
   // Ambil config dinamis dari database
   const configData = await Config.findOne({ key: "announcementDate" }).lean();
-  const announcementDateStr = configData?.value || "2026-05-04T00:00:00+07:00";
-  const announcementStartDate = new Date(announcementDateStr);
+  const announcementDateStr = configData?.value || "2026-05-04T00:00:00+08:00";
+  const announcementStartDate = new Date(normalizeWitaDateString(announcementDateStr));
 
   // Cek apakah waktu pengumuman sudah tiba
   if (Date.now() < announcementStartDate.getTime()) {
