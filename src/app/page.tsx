@@ -182,7 +182,7 @@ export default function Home() {
               <br />        
               PLT. Kepala SMA Negeri 1 Samarinda 
               <br />
-              Nomor : ..../..../SMAN1SMR/2026 
+              Nomor : 400.3.8/0760/SMAN1SMR/2026
               <br />
               tentang Kelulusan Murid Kelas XII Tahun Ajaran 2025/2026 
               <br />
